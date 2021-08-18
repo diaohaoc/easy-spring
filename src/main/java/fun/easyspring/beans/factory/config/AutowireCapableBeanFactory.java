@@ -2,7 +2,6 @@ package fun.easyspring.beans.factory.config;
 
 import fun.easyspring.beans.BeansException;
 import fun.easyspring.beans.factory.BeanFactory;
-import fun.easyspring.beans.factory.BeanPostProcessor;
 
 /**
  * 该接口提供了用于整合其他框架的能力，让 easy-spring 框架去管理不被框架管理的bean

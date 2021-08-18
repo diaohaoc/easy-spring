@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans>
 
-    <bean id="userDao" class="test.bean.UserDao"/>
+<!--    <bean id="userDao" class="test.bean.UserDao" init-method="initMethod" destroy-method="destroyMethod"/>-->
 
-    <bean id="userService" class="test.bean.UserService">
+
+
+    <bean id="userService" class="test.bean.UserService" scope="prototype">
         <property name="name" value="10002"/>
-        <property name="userDao" ref="userDao"/>
+        <property name="company" value="1231"/>
+        <property name="location" value="河南"/>
+        <property name="userDao" ref="proxyUserDao"/>
     </bean>
+
+    <bean id="proxyUserDao" class="test.bean.ProxyUserDao"/>
+
+    <bean class="test.listener.RefreshListener" />
+
+
+    <!--    <bean class="test.postprocessor.TestBeanFactoryPostProcessor"/>-->
+<!--    <bean class="test.postprocessor.TestBeanPostProcessor"/>-->
 
 </beans>

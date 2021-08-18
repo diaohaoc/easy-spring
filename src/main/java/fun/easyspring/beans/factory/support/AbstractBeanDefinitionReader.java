@@ -1,6 +1,5 @@
 package fun.easyspring.beans.factory.support;
 
-import fun.easyspring.beans.factory.config.BeanDefinitionRegistry;
 import fun.easyspring.core.io.DefaultResourceLoader;
 import fun.easyspring.core.io.ResourceLoader;
 

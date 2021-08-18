@@ -1,9 +1,9 @@
 package fun.easyspring.beans.factory.support;
 
+import cn.hutool.core.lang.Assert;
 import fun.easyspring.beans.BeansException;
 import fun.easyspring.beans.factory.NoSuchBeanDefinitionException;
 import fun.easyspring.beans.factory.config.BeanDefinition;
-import fun.easyspring.beans.factory.config.BeanDefinitionRegistry;
 import fun.easyspring.beans.factory.config.ConfigurableListableBeanFactory;
 
 import java.util.HashMap;
@@ -13,13 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Create by DiaoHao on 2021/7/17 20:42
  */
-public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFactory implements BeanDefinitionRegistry, ConfigurableListableBeanFactory {
+public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFactory implements ConfigurableListableBeanFactory, BeanDefinitionRegistry {
 
     private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
 
     public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
-        assert beanName != null : "Bean name must not be null";
-        assert beanDefinition != null : "BeanDefinition must not be null";
+        Assert.notNull(beanName, "Bean name must not be null");
+        Assert.notNull(beanDefinition, "BeanDefinition must not be null");
         synchronized (this.beanDefinitionMap) {
             BeanDefinition oldBeanDefinition = beanDefinitionMap.get(beanName);
             if (oldBeanDefinition != null) {
@@ -33,7 +33,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
     @Override
     public BeanDefinition removeBeanDefinition(String beanName) throws NoSuchBeanDefinitionException {
-        assert beanName != null : "Bean name must not be null";
+        Assert.notNull(beanName, "Bean name must not be null");
         return this.beanDefinitionMap.remove(beanName);
     }
 
@@ -48,13 +48,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
     @Override
     public boolean containsBeanDefinition(String beanName) {
-        assert beanName != null : "Bean Name must not be null";
+        Assert.notNull(beanName, "Bean name must not be null");
         return this.beanDefinitionMap.containsKey(beanName);
     }
 
     @Override
     public <T> T createBean(Class<T> beanClass) throws BeansException {
-        return null;
+        BeanDefinition beanDefinition = new BeanDefinition(beanClass);
+        return (T) this.createBean(beanClass.getName(), beanDefinition, null);
     }
 
     @Override
@@ -75,6 +76,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
     @Override
     public void preInstantiationSingletons() throws BeansException {
-
+        beanDefinitionMap.keySet().forEach(this::getBean);
     }
+
 }

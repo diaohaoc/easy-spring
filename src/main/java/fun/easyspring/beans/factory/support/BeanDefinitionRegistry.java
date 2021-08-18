@@ -1,6 +1,7 @@
-package fun.easyspring.beans.factory.config;
+package fun.easyspring.beans.factory.support;
 
 import fun.easyspring.beans.factory.NoSuchBeanDefinitionException;
+import fun.easyspring.beans.factory.config.BeanDefinition;
 
 /**
  * Create by DiaoHao on 2021/7/17 20:44

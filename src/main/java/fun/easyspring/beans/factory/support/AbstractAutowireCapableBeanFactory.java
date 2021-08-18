@@ -4,13 +4,15 @@ import cn.hutool.core.bean.BeanUtil;
 import fun.easyspring.beans.BeansException;
 import fun.easyspring.beans.PropertyValue;
 import fun.easyspring.beans.PropertyValues;
-import fun.easyspring.beans.factory.AbstractBeanFactory;
-import fun.easyspring.beans.factory.CglibSubclassInstantiationStrategy;
-import fun.easyspring.beans.factory.InstantiationStrategy;
+import fun.easyspring.beans.factory.*;
+import fun.easyspring.beans.factory.config.AutowireCapableBeanFactory;
 import fun.easyspring.beans.factory.config.BeanDefinition;
+import fun.easyspring.beans.factory.config.BeanPostProcessor;
 import fun.easyspring.beans.factory.config.BeanReference;
+import fun.easyspring.beans.utils.StringUtils;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 /**
  *
@@ -18,7 +20,7 @@ import java.lang.reflect.Constructor;
  *
  * Create by DiaoHao on 2021/7/17 20:15
  */
-public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory {
+public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
 
     private InstantiationStrategy instantiationStrategy = new CglibSubclassInstantiationStrategy();
 
@@ -30,12 +32,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         try {
             bean = createBeanInstantiation(beanDefinition, beanName, args);
             // 填充属性信息
-            addPropertyValues(beanName, bean, beanDefinition);
+            populateBean(beanName, bean, beanDefinition);
+
+            // 执行 bean 的初始化方法和 前置后置处理器
+            bean = initializeBean(beanName, bean, beanDefinition);
         } catch (Exception e) {
             throw new BeansException("Instantiation of bean failed", e);
         }
 
-        registerSingleton(beanName, bean);
+        // 如果该 bean 为 DisposableBean，则将其注册到 DisposableBean 容器中
+        this.registerDisposableBeanIfNecessary(beanName, bean, beanDefinition);
+
+        if (beanDefinition.isSingleton()) {
+            registerSingleton(beanName, bean);
+        }
 
         return bean;
     }
@@ -55,7 +65,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         return getInstantiationStrategy().instantiation(beanDefinition, beanName, constructorToUse, args);
     }
 
-    protected void addPropertyValues(String beanName, Object bean, BeanDefinition beanDefinition) {
+    protected void populateBean(String beanName, Object bean, BeanDefinition beanDefinition) {
         try {
             PropertyValues pvs = beanDefinition.getPropertyValues();
             for (PropertyValue pv : pvs.getPropertyValues()) {
@@ -71,6 +81,82 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             }
         } catch (Exception e) {
             throw new BeansException("Error setting property values", e);
+        }
+    }
+
+    private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) {
+        if (bean instanceof Aware) {
+            if (bean instanceof BeanFactoryAware) {
+                ((BeanFactoryAware) bean).setBeanFactory(this);
+            }
+            if (bean instanceof BeanNameAware) {
+                ((BeanNameAware) bean).setBeanName(beanName);
+            }
+            if (bean instanceof BeanClassLoaderAware) {
+                ((BeanClassLoaderAware) bean).setBeanClassLoader(getBeanClassLoader());
+            }
+        }
+
+
+        Object wrappedBean = applyBeanPostProcessorBeforeInitialization(bean, beanName);
+
+        try {
+            invokeInitializeBean(beanName, wrappedBean, beanDefinition);
+        } catch (Exception e) {
+            throw new BeansException("Invocation of init method of bean[" + beanName +"] failed", e);
+        }
+
+        wrappedBean = applyBeanPostProcessorAfterInitialization(wrappedBean, beanName);
+        return wrappedBean;
+    }
+
+    private void invokeInitializeBean(String beanName, Object wrappedBean, BeanDefinition beanDefinition) throws Exception {
+        boolean isInitializingBean = wrappedBean instanceof InitializingBean;
+        if (isInitializingBean) {
+            ((InitializingBean) wrappedBean).afterPropertiesSet();
+        }
+
+        if (beanDefinition != null) {
+            String initMethodName = beanDefinition.getInitMethodName();
+            // 可以防止调用两次初始化函数
+            if (!StringUtils.isEmpty(initMethodName) && !isInitializingBean) {
+                Method initMethod = wrappedBean.getClass().getMethod(initMethodName);
+                initMethod.invoke(wrappedBean);
+            }
+        }
+    }
+
+    private Object applyBeanPostProcessorBeforeInitialization(Object existingBean, String beanName) {
+        Object result = existingBean;
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            Object current = beanPostProcessor.postProcessorBeforeInitialization(result, beanName);
+            if (null == current) {
+                return result;
+            }
+            result = current;
+        }
+        return result;
+    }
+
+    private Object applyBeanPostProcessorAfterInitialization(Object existingBean, String beanName) {
+        Object result = existingBean;
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            Object current = beanPostProcessor.postProcessorAfterInitialization(result, beanName);
+            if (null == current) {
+                return result;
+            }
+            result = current;
+        }
+        return result;
+    }
+
+    private void registerDisposableBeanIfNecessary(String beanName, Object bean, BeanDefinition beanDefinition) {
+        if (!beanDefinition.isSingleton()) {
+            return;
+        }
+
+        if (bean instanceof DisposableBean || !StringUtils.isEmpty(beanDefinition.getDestroyMethodName())) {
+            registerDisposableBean(beanName, new DisposableBeanAdapter(bean, beanName, beanDefinition));
         }
     }
 

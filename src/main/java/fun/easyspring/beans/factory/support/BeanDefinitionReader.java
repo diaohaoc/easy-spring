@@ -1,7 +1,6 @@
 package fun.easyspring.beans.factory.support;
 
 import fun.easyspring.beans.BeansException;
-import fun.easyspring.beans.factory.config.BeanDefinitionRegistry;
 import fun.easyspring.core.io.Resource;
 import fun.easyspring.core.io.ResourceLoader;
 
@@ -19,4 +18,6 @@ public interface BeanDefinitionReader {
     void loadBeanDefinition(Resource... resources) throws BeansException;
 
     void loadBeanDefinition(String location) throws BeansException;
+
+    void loadBeanDefinition(String[] locations) throws BeansException;
 }

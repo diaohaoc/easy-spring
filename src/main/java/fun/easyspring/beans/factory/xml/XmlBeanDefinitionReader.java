@@ -5,7 +5,7 @@ import cn.hutool.core.util.XmlUtil;
 import fun.easyspring.beans.BeansException;
 import fun.easyspring.beans.PropertyValue;
 import fun.easyspring.beans.factory.config.BeanDefinition;
-import fun.easyspring.beans.factory.config.BeanDefinitionRegistry;
+import fun.easyspring.beans.factory.support.BeanDefinitionRegistry;
 import fun.easyspring.beans.factory.config.BeanReference;
 import fun.easyspring.beans.factory.support.AbstractBeanDefinitionReader;
 import fun.easyspring.beans.utils.StringUtils;
@@ -27,7 +27,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
         super(registry);
     }
 
-    private XmlBeanDefinitionReader(BeanDefinitionRegistry registry, ResourceLoader resourceLoader) {
+    public XmlBeanDefinitionReader(BeanDefinitionRegistry registry, ResourceLoader resourceLoader) {
         super(registry, resourceLoader);
     }
 
@@ -55,6 +55,13 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
         loadBeanDefinition(resource);
     }
 
+    @Override
+    public void loadBeanDefinition(String[] locations) throws BeansException {
+        for (String location : locations) {
+            loadBeanDefinition(location);
+        }
+    }
+
     private void doLoadBeanDefinition(InputStream inputStream) throws ClassNotFoundException {
         Document document = XmlUtil.readXML(inputStream);
         Element root = document.getDocumentElement();
@@ -73,6 +80,9 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
             String id = bean.getAttribute("id");
             String name = bean.getAttribute("name");
             String className = bean.getAttribute("class");
+            String initMethod = bean.getAttribute("init-method");
+            String destroyMethod = bean.getAttribute("destroy-method");
+            String scope = bean.getAttribute("scope");
 
             Class<?> clazz = Class.forName(className);
 
@@ -83,6 +93,12 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
             }
 
             BeanDefinition beanDefinition = new BeanDefinition(clazz);
+            beanDefinition.setInitMethodName(initMethod);
+            beanDefinition.setDestroyMethodName(destroyMethod);
+
+            if (!StringUtils.isEmpty(scope)) {
+                beanDefinition.setScope(scope);
+            }
 
             // 填充属性
             for (int j = 0; j < bean.getChildNodes().getLength(); j++) {
