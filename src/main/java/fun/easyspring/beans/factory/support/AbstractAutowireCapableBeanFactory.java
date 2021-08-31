@@ -5,10 +5,7 @@ import fun.easyspring.beans.BeansException;
 import fun.easyspring.beans.PropertyValue;
 import fun.easyspring.beans.PropertyValues;
 import fun.easyspring.beans.factory.*;
-import fun.easyspring.beans.factory.config.AutowireCapableBeanFactory;
-import fun.easyspring.beans.factory.config.BeanDefinition;
-import fun.easyspring.beans.factory.config.BeanPostProcessor;
-import fun.easyspring.beans.factory.config.BeanReference;
+import fun.easyspring.beans.factory.config.*;
 import fun.easyspring.beans.utils.StringUtils;
 
 import java.lang.reflect.Constructor;
@@ -26,11 +23,28 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     @Override
     protected Object createBean(String beanName, BeanDefinition beanDefinition, Object[] args) throws BeansException {
+        // 直接返回代理类
+        Object bean = resolveBeforeInstantiation(beanName, beanDefinition);
+        if (null != bean) {
+            return bean;
+        }
 
+        return doCreateBean(beanName, beanDefinition, args);
+    }
+
+    protected Object doCreateBean(String beanName, BeanDefinition beanDefinition, Object[] args) {
         Object bean = null;
-
         try {
             bean = createBeanInstantiation(beanDefinition, beanName, args);
+
+            boolean earlySingletonExpose = beanDefinition.isSingleton() && this.isSingletonCurrentlyInCreation(beanName);
+            if (earlySingletonExpose) {
+                final Object finalBean = bean;
+                this.addSingletonFactory(beanName, () -> {
+                    return getEarlyReference(beanName, finalBean, beanDefinition);
+                });
+            }
+
             // 填充属性信息
             populateBean(beanName, bean, beanDefinition);
 
@@ -43,11 +57,27 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         // 如果该 bean 为 DisposableBean，则将其注册到 DisposableBean 容器中
         this.registerDisposableBeanIfNecessary(beanName, bean, beanDefinition);
 
-        if (beanDefinition.isSingleton()) {
-            registerSingleton(beanName, bean);
-        }
-
         return bean;
+    }
+
+    protected Object resolveBeforeInstantiation(String beanName, BeanDefinition beanDefinition) {
+        Object bean = applyBeanPostProcessorBeforeInstantiation(beanDefinition.getBeanClass(), beanName);
+        if (null != bean) {
+            bean = applyBeanPostProcessorAfterInitialization(bean, beanName);
+        }
+        return bean;
+    }
+
+    protected Object applyBeanPostProcessorBeforeInstantiation(Class<?> beanClass, String beanName) {
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                Object result = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessBeforeInstantiation(beanClass, beanName);
+                if (null != result) {
+                    return result;
+                }
+            }
+        }
+        return null;
     }
 
     protected Object createBeanInstantiation(BeanDefinition beanDefinition, String beanName, Object[] args) {
@@ -63,6 +93,16 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             }
         }
         return getInstantiationStrategy().instantiation(beanDefinition, beanName, constructorToUse, args);
+    }
+
+    protected Object getEarlyReference(String beanName, Object bean, BeanDefinition beanDefinition) {
+        Object exposedBean = bean;
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof SmartInstantiationAwareBeanPostProcessor) {
+                exposedBean = ((SmartInstantiationAwareBeanPostProcessor)beanPostProcessor).getEarlyBeanReference(exposedBean, beanName);
+            }
+        }
+        return exposedBean;
     }
 
     protected void populateBean(String beanName, Object bean, BeanDefinition beanDefinition) {

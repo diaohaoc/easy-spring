@@ -7,7 +7,7 @@ import fun.easyspring.context.ApplicationContext;
 /**
  * Create by DiaoHao on 2021/7/17 22:27
  */
-public class UserService {
+public class UserService implements IUserService {
 
     private String name;
 
@@ -17,8 +17,10 @@ public class UserService {
 
     private IUserDao userDao;
 
+//    private AnotherService anotherService;
+
     public void queryUserInfo(){
-        System.out.println("查询用户信息: " + userDao.queryName(this.name));
+        System.out.println("查询用户信息: ");
         System.out.println(this.toString());
     }
 
@@ -53,5 +55,14 @@ public class UserService {
     public void setLocation(String location) {
         this.location = location;
     }
+
+//    public AnotherService getAnotherService() {
+//        System.out.println("获取anotherService");
+//        return anotherService;
+//    }
+//
+//    public void setAnotherService(AnotherService anotherService) {
+//        this.anotherService = anotherService;
+//    }
 
 }

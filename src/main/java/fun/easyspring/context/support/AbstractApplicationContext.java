@@ -160,4 +160,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
     public String[] getBeanDefinitionNames() {
         return this.obtainBeanFactory().getBeanDefinitionNames();
     }
+
+    @Override
+    public String[] getBeanNamesForType(Class<?> type) {
+        return this.obtainBeanFactory().getBeanNamesForType(type);
+    }
 }

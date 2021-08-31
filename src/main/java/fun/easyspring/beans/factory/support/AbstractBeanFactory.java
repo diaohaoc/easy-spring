@@ -36,16 +36,25 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
         return doGetBean(name, null, args);
     }
 
-    protected <T> T doGetBean(final String beanName, Class<T> requiredType, final Object[] args) {
+    protected <T> T doGetBean(final String beanName, Class<?> requiredType, final Object[] args) {
         Object sharedInstance = getSingleton(beanName);
-        Object bean;
+        Object bean = null;
         if (sharedInstance != null) {
-            return (T) getObjectForBeanInstance(sharedInstance, beanName);
+            bean = getObjectForBeanInstance(sharedInstance, beanName);
+        } else {
+            BeanDefinition beanDefinition = getBeanDefinition(beanName);
+            if (beanDefinition.isSingleton()) {
+                sharedInstance = this.getSingleton(beanName, () ->{
+                    return this.createBean(beanName, beanDefinition, args);
+                });
+                bean = getObjectForBeanInstance(sharedInstance, beanName);
+            } else if (beanDefinition.isPrototype()) {
+                Object prototypeInstance = this.createBean(beanName, beanDefinition, args);
+                bean = getObjectForBeanInstance(prototypeInstance, beanName);
+            }
         }
 
-        BeanDefinition beanDefinition = getBeanDefinition(beanName);
-        bean = createBean(beanName, beanDefinition, args);
-        return (T) getObjectForBeanInstance(bean, beanName);
+        return (T) bean;
     }
 
     private Object getObjectForBeanInstance(Object beanInstance, String beanName) {

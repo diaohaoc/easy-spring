@@ -8,6 +8,7 @@ import fun.easyspring.beans.factory.config.ConfigurableListableBeanFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -72,6 +73,12 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     @Override
     public String[] getBeanDefinitionNames() {
         return this.beanDefinitionMap.keySet().toArray(new String[0]);
+    }
+
+    @Override
+    public String[] getBeanNamesForType(Class<?> type) {
+        Set<String> beanNamesSet = getBeansOfType(type).keySet();
+        return beanNamesSet.toArray(new String[0]);
     }
 
     @Override

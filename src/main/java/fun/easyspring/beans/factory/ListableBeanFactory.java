@@ -11,7 +11,9 @@ import java.util.Map;
  */
 public interface ListableBeanFactory extends BeanFactory {
 
-    public <T> Map<String, T> getBeansOfType(Class<T> type) throws BeansException;
+    <T> Map<String, T> getBeansOfType(Class<T> type) throws BeansException;
 
-    public String[] getBeanDefinitionNames();
+    String[] getBeanDefinitionNames();
+
+    String[] getBeanNamesForType(Class<?> type);
 }

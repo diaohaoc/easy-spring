@@ -5,16 +5,35 @@
 
 
 
-    <bean id="userService" class="test.bean.UserService" scope="prototype">
-        <property name="name" value="10002"/>
-        <property name="company" value="1231"/>
-        <property name="location" value="河南"/>
-        <property name="userDao" ref="proxyUserDao"/>
+    <bean id="userService" class="test.bean.UserService"/>
+<!--        <property name="anotherService" ref="anotherService"/>-->
+<!--    </bean>-->
+<!--    <bean id="anotherService" class="test.bean.AnotherService"/>-->
+<!--        <property name="userService" ref="userService"/>-->
+<!--    </bean>-->
+
+    <bean class="fun.easyspring.aop.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" />
+
+    <bean id="beforeAdvice" class="test.bean.UserServiceBeforeAdvice"/>
+    <bean id="afterAdvice" class="test.bean.UserServiceAfterAdvice"/>
+
+    <bean id="methodInterceptorBefore" class="fun.easyspring.aop.aop.framework.adapt.MethodBeforeAdviceInterceptor">
+        <property name="advice" ref="beforeAdvice"/>
     </bean>
 
-    <bean id="proxyUserDao" class="test.bean.ProxyUserDao"/>
+    <bean id="methodInterceptorAfter" class="fun.easyspring.aop.aop.framework.adapt.AfterReturningAdviceInterceptor">
+        <property name="advice" ref="afterAdvice"/>
+    </bean>
 
-    <bean class="test.listener.RefreshListener" />
+    <bean id="pointcutBefore" class="fun.easyspring.aop.aop.aspectj.AspectJExpressionPointcutAdvisor">
+        <property name="expression" value="execution(* test.bean.IUserService.*(..))"/>
+        <property name="advice" ref="methodInterceptorBefore"/>
+    </bean>
+
+    <bean id="pointcutAfter" class="fun.easyspring.aop.aop.aspectj.AspectJExpressionPointcutAdvisor">
+        <property name="expression" value="execution(* test.bean.IUserService.*(..))"/>
+        <property name="advice" ref="methodInterceptorAfter"/>
+    </bean>
 
 
     <!--    <bean class="test.postprocessor.TestBeanFactoryPostProcessor"/>-->

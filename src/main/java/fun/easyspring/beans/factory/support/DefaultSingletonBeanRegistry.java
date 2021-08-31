@@ -1,13 +1,13 @@
 package fun.easyspring.beans.factory.support;
 
+import cn.hutool.core.lang.Assert;
 import fun.easyspring.beans.BeansException;
 import fun.easyspring.beans.factory.DisposableBean;
+import fun.easyspring.beans.factory.ObjectFactory;
 import fun.easyspring.beans.factory.config.SingletonBeanRegistry;
 import fun.easyspring.beans.utils.StringUtils;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -19,12 +19,73 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
      * 真正存放单例 bean 的容器
      */
     private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
+    private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
+    private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
+    private final Set<String> singletonsCurrentlyInCreation = Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
     private final Map<String, DisposableBean> disposableBeanMap = new LinkedHashMap<>();
 
 
+    protected void addSingleton(String beanName, Object singletObject) {
+        synchronized (this.singletonObjects) {
+            this.singletonObjects.put(beanName, singletObject);
+            this.earlySingletonObjects.remove(beanName);
+            this.singletonFactories.remove(beanName);
+        }
+    }
+
+    protected void addSingletonFactory(String beanName, ObjectFactory<?> singletFactory) {
+        Assert.notNull(singletFactory, "Singleton factory must not be null");
+        synchronized (this.singletonObjects) {
+            this.singletonFactories.put(beanName, singletFactory);
+            this.earlySingletonObjects.remove(beanName);
+        }
+    }
+
+
     public Object getSingleton(String beanName) {
-        return singletonObjects.get(beanName);
+        return getSingleton(beanName, true);
+    }
+
+    public Object getSingleton(String beanName, boolean allowEarlyReference) {
+        Object singletonObject = singletonObjects.get(beanName);
+        if (singletonObject == null && this.isSingletonCurrentlyInCreation(beanName)) {
+            synchronized (this.singletonObjects) {
+                singletonObject = earlySingletonObjects.get(beanName);
+                if (singletonObject == null && allowEarlyReference) {
+                    ObjectFactory<?> singletonFactory = singletonFactories.get(beanName);
+                    if (singletonFactory != null) {
+                        singletonObject = singletonFactory.getObject();
+                        earlySingletonObjects.put(beanName, singletonObject);
+                        singletonFactories.remove(beanName);
+                    }
+                }
+            }
+        }
+        return singletonObject;
+    }
+
+    public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
+        Assert.notNull(beanName, "Bean name must not be null");
+        synchronized (this.singletonObjects) {
+            Object singletonObject = singletonObjects.get(beanName);
+            if (singletonObject == null) {
+                this.beforeSingletonCreation(beanName);
+                boolean newSingleton = false;
+                try {
+                    singletonObject = singletonFactory.getObject();
+                    newSingleton = true;
+                } finally {
+                    this.afterSingletonCreation(beanName);
+                }
+
+                if (newSingleton) {
+                    this.addSingleton(beanName, singletonObject);
+                }
+
+            }
+            return singletonObject;
+        }
     }
 
     public void registerSingleton(String beanName, Object singletonObject) {
@@ -67,5 +128,17 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
 
     public String[] getSingletonNames() {
         return StringUtils.toStringArray(singletonObjects.keySet());
+    }
+
+    public boolean isSingletonCurrentlyInCreation(String beanName) {
+        return this.singletonsCurrentlyInCreation.contains(beanName);
+    }
+
+    protected void beforeSingletonCreation(String beanName) {
+        this.singletonsCurrentlyInCreation.add(beanName);
+    }
+
+    protected void afterSingletonCreation(String beanName) {
+        this.singletonsCurrentlyInCreation.remove(beanName);
     }
 }
