@@ -35,7 +35,7 @@ public class ApiTest {
         reader.loadBeanDefinition("classpath:easy-spring.xml");
 
         UserService userService = (UserService) beanFactory.getBean("userService");
-        userService.queryUserInfo();
+//        userService.queryUserInfo();
     }
 
     @Test
@@ -70,7 +70,7 @@ public class ApiTest {
         ClassPathXmlApplicationContext beanFactory = new ClassPathXmlApplicationContext("classpath:easy-spring.xml");
         IUserService userService = (IUserService) beanFactory.getBean("userService");
 
-        userService.queryUserInfo();
+//        userService.queryUserInfo();
 
     }
 
@@ -86,6 +86,13 @@ public class ApiTest {
         CglibAopProxy proxy2 = new CglibAopProxy(config1);
         IUserService userService1 = (IUserService) proxy2.getProxy();
         int i = 0;
+    }
+
+    @Test
+    public void test_annotation() throws NoSuchMethodException {
+        ClassPathXmlApplicationContext beanFactory = new ClassPathXmlApplicationContext("classpath:easy-spring.xml");
+        IUserService userService = (IUserService) beanFactory.getBean("userService");
+        userService.queryUserInfo("10001");
     }
 
 }

@@ -16,6 +16,16 @@ public interface BeanFactory {
     Object getBean(String name) throws BeansException;
 
     /**
+     * 根据指定的 bean 的类型获取 bean 实例
+     *
+     * @param requiredType bean 的类型
+     * @param <T> </T>指定的 bean 的类型
+     * @return  bean 的实例，如果不存在就返回 null
+     * @throws BeansException 在获取 bean 实例过程中发生的异常
+     */
+    <T> T getBean(Class<T> requiredType) throws BeansException;
+
+    /**
      * 根据指定的 bean 的名称和类型获取 bean 实例
      *
      * @param name bean的名称

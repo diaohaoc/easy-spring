@@ -82,7 +82,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
     @Override
     public void addBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
-        Assert.notNull(beanPostProcessor, "Bean name must not be null");
+        Assert.notNull(beanPostProcessor, "Bean post processor must not be null");
         this.beanPostProcessors.add(beanPostProcessor);
     }
 
@@ -97,12 +97,12 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
     @Override
     public boolean isSingleton(String name) throws NoSuchBeanDefinitionException {
-        return false;
+        return getBeanDefinition(name).isSingleton();
     }
 
     @Override
     public boolean isPrototype(String name) throws NoSuchBeanDefinitionException {
-        return false;
+        return getBeanDefinition(name).isPrototype();
     }
 
     @Override

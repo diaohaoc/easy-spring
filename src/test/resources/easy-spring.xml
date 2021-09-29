@@ -1,39 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
 
 <!--    <bean id="userDao" class="test.bean.UserDao" init-method="initMethod" destroy-method="destroyMethod"/>-->
+        <context:component-scan base-package="test.bean"/>
 
 
-
-    <bean id="userService" class="test.bean.UserService"/>
+<!--    <bean id="userService" class="test.bean.UserService"/>-->
 <!--        <property name="anotherService" ref="anotherService"/>-->
 <!--    </bean>-->
 <!--    <bean id="anotherService" class="test.bean.AnotherService"/>-->
 <!--        <property name="userService" ref="userService"/>-->
 <!--    </bean>-->
 
-    <bean class="fun.easyspring.aop.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" />
+<!--    <bean class="fun.easyspring.aop.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" />-->
 
-    <bean id="beforeAdvice" class="test.bean.UserServiceBeforeAdvice"/>
-    <bean id="afterAdvice" class="test.bean.UserServiceAfterAdvice"/>
+<!--    <bean id="beforeAdvice" class="test.bean.UserServiceBeforeAdvice"/>-->
+<!--    <bean id="afterAdvice" class="test.bean.UserServiceAfterAdvice"/>-->
 
-    <bean id="methodInterceptorBefore" class="fun.easyspring.aop.aop.framework.adapt.MethodBeforeAdviceInterceptor">
-        <property name="advice" ref="beforeAdvice"/>
-    </bean>
+<!--    <bean id="methodInterceptorBefore" class="fun.easyspring.aop.aop.framework.adapt.MethodBeforeAdviceInterceptor">-->
+<!--        <property name="advice" ref="beforeAdvice"/>-->
+<!--    </bean>-->
 
-    <bean id="methodInterceptorAfter" class="fun.easyspring.aop.aop.framework.adapt.AfterReturningAdviceInterceptor">
-        <property name="advice" ref="afterAdvice"/>
-    </bean>
+<!--    <bean id="methodInterceptorAfter" class="fun.easyspring.aop.aop.framework.adapt.AfterReturningAdviceInterceptor">-->
+<!--        <property name="advice" ref="afterAdvice"/>-->
+<!--    </bean>-->
 
-    <bean id="pointcutBefore" class="fun.easyspring.aop.aop.aspectj.AspectJExpressionPointcutAdvisor">
-        <property name="expression" value="execution(* test.bean.IUserService.*(..))"/>
-        <property name="advice" ref="methodInterceptorBefore"/>
-    </bean>
+<!--    <bean id="pointcutBefore" class="fun.easyspring.aop.aop.aspectj.AspectJExpressionPointcutAdvisor">-->
+<!--        <property name="expression" value="execution(* test.bean.IUserService.*(..))"/>-->
+<!--        <property name="advice" ref="methodInterceptorBefore"/>-->
+<!--    </bean>-->
 
-    <bean id="pointcutAfter" class="fun.easyspring.aop.aop.aspectj.AspectJExpressionPointcutAdvisor">
-        <property name="expression" value="execution(* test.bean.IUserService.*(..))"/>
-        <property name="advice" ref="methodInterceptorAfter"/>
-    </bean>
+<!--    <bean id="pointcutAfter" class="fun.easyspring.aop.aop.aspectj.AspectJExpressionPointcutAdvisor">-->
+<!--        <property name="expression" value="execution(* test.bean.IUserService.*(..))"/>-->
+<!--        <property name="advice" ref="methodInterceptorAfter"/>-->
+<!--    </bean>-->
+
+
 
 
     <!--    <bean class="test.postprocessor.TestBeanFactoryPostProcessor"/>-->

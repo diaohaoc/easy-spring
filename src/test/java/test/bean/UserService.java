@@ -2,11 +2,14 @@ package test.bean;
 
 import fun.easyspring.beans.BeansException;
 import fun.easyspring.beans.factory.*;
+import fun.easyspring.beans.factory.annotation.Autowired;
 import fun.easyspring.context.ApplicationContext;
+import fun.easyspring.stereotype.Component;
 
 /**
  * Create by DiaoHao on 2021/7/17 22:27
  */
+@Component("userService")
 public class UserService implements IUserService {
 
     private String name;
@@ -15,20 +18,22 @@ public class UserService implements IUserService {
 
     private String location;
 
-    private IUserDao userDao;
+    @Autowired
+    private UserDao userDao;
 
-//    private AnotherService anotherService;
+    @Autowired
+    private AnotherService anotherService;
 
-    public void queryUserInfo(){
-        System.out.println("查询用户信息: ");
-        System.out.println(this.toString());
+    public void queryUserInfo(String id){
+        System.out.println("查询用户信息: " + userDao.queryName(id));
+        System.out.println("获取anotherService" + anotherService);
     }
 
-    public IUserDao getUserDao() {
+    public UserDao getUserDao() {
         return userDao;
     }
 
-    public void setUserDao(IUserDao userDao) {
+    public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
     }
 
@@ -56,13 +61,13 @@ public class UserService implements IUserService {
         this.location = location;
     }
 
-//    public AnotherService getAnotherService() {
-//        System.out.println("获取anotherService");
-//        return anotherService;
-//    }
-//
-//    public void setAnotherService(AnotherService anotherService) {
-//        this.anotherService = anotherService;
-//    }
+    public AnotherService getAnotherService() {
+        System.out.println("获取anotherService");
+        return anotherService;
+    }
+
+    public void setAnotherService(AnotherService anotherService) {
+        this.anotherService = anotherService;
+    }
 
 }

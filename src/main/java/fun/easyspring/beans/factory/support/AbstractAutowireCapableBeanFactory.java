@@ -57,7 +57,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         // 如果该 bean 为 DisposableBean，则将其注册到 DisposableBean 容器中
         this.registerDisposableBeanIfNecessary(beanName, bean, beanDefinition);
 
-        return bean;
+        Object exposedObject = bean;
+//        if (beanDefinition.isSingleton()) {
+//            exposedObject = getSingleton(beanName, false);
+//            registerSingleton(beanName, exposedObject);
+//        }
+
+        return exposedObject;
     }
 
     protected Object resolveBeforeInstantiation(String beanName, BeanDefinition beanDefinition) {
@@ -108,6 +114,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     protected void populateBean(String beanName, Object bean, BeanDefinition beanDefinition) {
         try {
             PropertyValues pvs = beanDefinition.getPropertyValues();
+            for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+                if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                    ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessPropertyValues(pvs, bean, beanName);
+                }
+            }
+
             for (PropertyValue pv : pvs.getPropertyValues()) {
                 String name = pv.getName();
                 Object value = pv.getValue();

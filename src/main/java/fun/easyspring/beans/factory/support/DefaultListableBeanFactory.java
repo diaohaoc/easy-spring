@@ -6,9 +6,7 @@ import fun.easyspring.beans.factory.NoSuchBeanDefinitionException;
 import fun.easyspring.beans.factory.config.BeanDefinition;
 import fun.easyspring.beans.factory.config.ConfigurableListableBeanFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -51,6 +49,21 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     public boolean containsBeanDefinition(String beanName) {
         Assert.notNull(beanName, "Bean name must not be null");
         return this.beanDefinitionMap.containsKey(beanName);
+    }
+
+    @Override
+    public <T> T getBean(Class<T> requiredType) throws BeansException {
+        List<String> beanNames = new ArrayList<>();
+        for (Map.Entry<String, BeanDefinition> entry : beanDefinitionMap.entrySet()) {
+            Class<?> beanClass = entry.getValue().getBeanClass();
+            if (requiredType.isAssignableFrom(beanClass)) {
+                beanNames.add(entry.getKey());
+            }
+        }
+        if (beanNames.size() == 1) {
+            return getBean(beanNames.get(0), requiredType);
+        }
+        throw new BeansException(requiredType + " expected singleton but not found");
     }
 
     @Override
